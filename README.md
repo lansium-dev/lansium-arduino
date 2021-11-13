@@ -1,5 +1,5 @@
 # Lansium Arduino
-Lansium-Arduino is a library for connect Lansium IoT Server using SocketIO.
+Lansium-Arduino is a library for connect board to Lansium IoT Server using SocketIO.
 
 ## Downloads
 Homepage: https://lansium.com
@@ -36,3 +36,45 @@ See https://github.com/Links2004/arduinoWebSockets#supported-hardware
   - Change Wifi SSID and Password 
 - **Step 5:** Upload code to board
 
+## Examples
+See [Lansium Examples](https://github.com/lansium-dev/lansium-arduino/tree/main/examples)
+
+## Basics
+Import this library
+```cpp
+#include <Lansium.h>
+
+Lansium lansium;
+```
+
+Initial connection
+```cpp
+void setup()
+{
+  ...
+  // make sure your board connected to the internet
+  lansium.begin(authToken);
+}
+```
+
+Keep socket connection
+```cpp
+void loop()
+{
+  lansium.loop();
+  ...
+}
+```
+
+Send events
+```cpp
+void sendStateChanged(int pin, bool state);
+
+void sendDataChanged(int pin, String data);
+void sendDataChanged(int pin, int data);
+void sendDataChanged(int pin, float data);
+void sendDataChanged(int pin, double data);
+```
+Use `sendStateChanged` for ON/OFF widgets (LED, Switch,...).
+
+Use `sendDataChanged` for data collection from sensor.
