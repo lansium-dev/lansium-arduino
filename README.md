@@ -78,3 +78,6 @@ void sendDataChanged(int pin, double data);
 Use `sendStateChanged` for ON/OFF widgets (LED, Switch,...).
 
 Use `sendDataChanged` for data collection from sensor.
+
+## Known Issues
+- Board cannot reconnect after loss of connection. (We'll fix it soon)
