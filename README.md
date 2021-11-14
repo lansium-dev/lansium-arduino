@@ -13,7 +13,7 @@ You must install the following libraries before install Lansium Arduino:
 - https://github.com/bblanchon/ArduinoJson
 - https://github.com/Links2004/arduinoWebSockets
 
-You can install **LansiumArduino** from the **Arduino Library Manager** (comming soon) or manual download source code.
+You can install **LansiumArduino** from the **Arduino Library Manager** or manual download source code.
 
 👉 [How to install a library in Arduino](https://www.arduino.cc/en/guide/libraries)
 
