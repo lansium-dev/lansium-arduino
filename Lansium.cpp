@@ -6,6 +6,7 @@
 
 SocketIOclient *io;
 String *authToken;
+void (*stateChangedCallback)(int, bool);
 
 Lansium::Lansium(){};
 
@@ -22,6 +23,10 @@ void listenEvents(uint8_t *payload, size_t length)
         int pin = doc[1]["pin"];
         bool state = doc[1]["state"];
 
+        if (stateChangedCallback != NULL)
+        {
+            stateChangedCallback(pin, state);
+        }
         analogWrite(pin, state ? 255 : 0);
     }
 }
@@ -135,6 +140,11 @@ void Lansium::sendDataChanged(int pin, float data)
 void Lansium::sendDataChanged(int pin, double data)
 {
     Lansium::send(LANSIUM_EVENT_DATA_CHANGE, pin, data);
+}
+
+void Lansium::addStateChangedCallback(void (*callback)(int, bool))
+{
+    stateChangedCallback = callback;
 }
 
 #endif /* LANSIUM_IMPLEMENT_H */

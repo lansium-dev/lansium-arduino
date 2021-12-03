@@ -6,3 +6,4 @@ send    KEYWORD2
 
 sendStateChanged    KEYWORD2
 sendDataChanged     KEYWORD2
+addStateChangedCallback     KEYWORD2

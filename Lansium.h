@@ -31,6 +31,8 @@ public:
     void sendDataChanged(int pin, int data);
     void sendDataChanged(int pin, float data);
     void sendDataChanged(int pin, double data);
+
+    void addStateChangedCallback(void (*callback)(int, bool));
 };
 
 #endif /* LANSIUM_H */
