@@ -1,17 +1,23 @@
 #ifndef LANSIUM_H
 #define LANSIUM_H
 
-#include <WebSocketsClient.h>
-#include <SocketIOclient.h>
+#define LANSIUM_BROKER "api-dev.lansium.com"
+#define LANSIUM_PORT 1883
 
-#define LANSIUM_HOST "api.lansium.com"
-#define LANSIUM_PORT 3006
+#define LANSIUM_CLIENT_TOPIC_NAME "lansium/devices/"
+#define LANSIUM_CLIENT_TOPIC_DATA "/data/"
+#define MQTT_KEEP_ALIVE 60
 
-#define SOCKET_RECONNECT_INTERVAL 10000
-
-#define LANSIUM_EVENT_AUTHENTICATE "authenticate"
-#define LANSIUM_EVENT_DATA_CHANGE "data_change"
-#define LANSIUM_EVENT_STATE_CHANGE "state_change"
+#include <ArduinoMqttClient.h>
+#if defined(ARDUINO_SAMD_MKRWIFI1010) || defined(ARDUINO_SAMD_NANO_33_IOT) || defined(ARDUINO_AVR_UNO_WIFI_REV2)
+  #include <WiFiNINA.h>
+#elif defined(ARDUINO_SAMD_MKR1000)
+  #include <WiFi101.h>
+#elif defined(ARDUINO_ARCH_ESP8266)
+  #include <ESP8266WiFi.h>
+#elif defined(ARDUINO_ARCH_ESP32)
+  #include <WiFi.h>
+#endif
 
 class Lansium
 {
@@ -19,20 +25,14 @@ public:
     Lansium();
     ~Lansium();
 
-    SocketIOclient _socketIO;
-    String _auth;
-
-    void begin(String auth);
+    void begin(String clientId, String auth);
     void loop();
-    void send(String event, int pin, auto data);
 
-    void sendStateChanged(int pin, bool state);
-    void sendDataChanged(int pin, String data);
-    void sendDataChanged(int pin, int data);
-    void sendDataChanged(int pin, float data);
-    void sendDataChanged(int pin, double data);
-
-    void addStateChangedCallback(void (*callback)(int, bool));
+    void send(int pin, bool data);
+    void send(int pin, int data);
+    void send(int pin, float data);
+    void send(int pin, double data);
+    void send(int pin, String data);
 };
 
 #endif /* LANSIUM_H */

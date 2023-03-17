@@ -6,7 +6,11 @@
 ESP8266WiFiMulti WiFiMulti;
 Lansium lansium;
 
-String auth = "YOUR_DEVICE_TOKEN";
+char clientId[] = "YOUR_DEVICE_ID";
+char auth[] = "YOUR_AUTH_TOKEN";
+
+char ssid[] = "SSID";
+char pass[] = "Password";
 
 void setup()
 {
@@ -17,14 +21,13 @@ void setup()
     {
         WiFi.softAPdisconnect(true);
     }
-
-    WiFiMulti.addAP("SSID", "Password");
-
+    WiFiMulti.addAP(ssid, pass);
     while (WiFiMulti.run() != WL_CONNECTED)
     {
+        Serial.print(".");
         delay(500);
     }
-    lansium.begin(auth);
+    lansium.begin(clientId, auth);
 }
 
 void loop()

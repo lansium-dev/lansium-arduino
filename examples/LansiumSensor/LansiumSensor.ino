@@ -11,7 +11,11 @@ Lansium lansium;
 
 DHT dht(12, DHTTYPE);
 
-String auth = "YOUR_DEVICE_TOKEN";
+char clientId[] = "YOUR_DEVICE_ID";
+char auth[] = "YOUR_AUTH_TOKEN";
+
+char ssid[] = "SSID";
+char pass[] = "Password";
 
 void setup()
 {
@@ -24,13 +28,13 @@ void setup()
     {
         WiFi.softAPdisconnect(true);
     }
-
-    WiFiMulti.addAP("SSID", "Password");
+    WiFiMulti.addAP(ssid, pass);
     while (WiFiMulti.run() != WL_CONNECTED)
     {
+        Serial.print(".");
         delay(500);
     }
-    lansium.begin(auth);
+    lansium.begin(clientId, auth);
 }
 
 unsigned long readTimestamp = 0;
@@ -39,9 +43,9 @@ void loop()
 {
     lansium.loop();
 
-    // send to server every 30 seconds
+    // send to server every 5 seconds
     uint64_t now = millis();
-    if (now - readTimestamp > 30000)
+    if (now - readTimestamp > 5000)
     {
         readTimestamp = now;
 
@@ -54,8 +58,8 @@ void loop()
             return;
         }
 
-        lansium.sendDataChanged(12, h);
-        // Write wirtual pin. Make sure it match with frontend widget pin
-        lansium.sendDataChanged(100, t);
+        lansium.send(12, h);
+        // You can write wirtual pin. Make sure it match with frontend widget pin
+        lansium.send(100, t);
     }
 }

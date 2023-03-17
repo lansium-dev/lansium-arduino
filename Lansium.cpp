@@ -4,147 +4,81 @@
 #include <ArduinoJson.h>
 #include "Lansium.h"
 
-SocketIOclient *io;
-String *authToken;
-void (*stateChangedCallback)(int, bool);
+WiFiClient wifiClient;
+MqttClient mqttClient(wifiClient);
 
 Lansium::Lansium(){};
-
 Lansium::~Lansium(){};
 
-void listenEvents(uint8_t *payload, size_t length)
-{
-    DynamicJsonDocument doc(1024);
-    deserializeJson(doc, payload, length);
-    String eventName = doc[0];
+String topic = "";
 
-    if (eventName == LANSIUM_EVENT_STATE_CHANGE)
-    {
-        int pin = doc[1]["pin"];
-        bool state = doc[1]["state"];
-
-        if (stateChangedCallback != NULL)
-        {
-            stateChangedCallback(pin, state);
+void onMqttMessage(int messageSize) {
+    int pinIndex = mqttClient.messageTopic().indexOf("data/");
+    if (pinIndex > -1) {
+        int pin = mqttClient.messageTopic().substring(pinIndex + 5).toInt();
+        String data = "";
+        while (mqttClient.available()) {
+            data += (char)mqttClient.read();
         }
-        analogWrite(pin, state ? 255 : 0);
+        analogWrite(pin, data.toInt());
     }
 }
 
-void sendAuthenticate()
+void Lansium::begin(String clientId, String auth)
 {
-    DynamicJsonDocument doc(1024);
-    JsonArray array = doc.to<JsonArray>();
-    array.add(LANSIUM_EVENT_AUTHENTICATE);
-    JsonObject param = array.createNestedObject();
-    param["token"] = *authToken;
-    String output;
-    serializeJson(doc, output);
-    io->sendEVENT(output);
-}
+    topic = LANSIUM_CLIENT_TOPIC_NAME + clientId + LANSIUM_CLIENT_TOPIC_DATA;
 
-void handleSocketIOEvents(socketIOmessageType_t type, uint8_t *payload, size_t length)
-{
-    switch (type)
+    mqttClient.setId(clientId);
+    mqttClient.setUsernamePassword(auth, auth);
+
+    while (!mqttClient.connect(LANSIUM_BROKER, LANSIUM_PORT))
     {
-    case sIOtype_DISCONNECT:
-        Serial.println("[SocketIO] Disconnected");
-        break;
-    case sIOtype_CONNECT:
-        Serial.print("[SocketIO] Connected to url: ");
-        Serial.println((char *)payload);
-        // join default namespace (no auto join in Socket.IO V3)
-        io->send(sIOtype_CONNECT, "/");
-        sendAuthenticate();
-        break;
-    case sIOtype_EVENT:
-        Serial.print("[SocketIO] Get event: ");
-        Serial.println((char *)payload);
-        listenEvents(payload, length);
-        break;
-    case sIOtype_ACK:
-        Serial.print("[SocketIO] Get ack: ");
-        Serial.println(length);
-        hexdump(payload, length);
-        break;
-    case sIOtype_ERROR:
-        Serial.print("[SocketIO] Get error: ");
-        Serial.println(length);
-        hexdump(payload, length);
-        break;
-    case sIOtype_BINARY_EVENT:
-        Serial.print("[SocketIO] Get binary: ");
-        Serial.println(length);
-        hexdump(payload, length);
-        break;
-    case sIOtype_BINARY_ACK:
-        Serial.print("[SocketIO] Get binary ack: ");
-        Serial.println(length);
-        hexdump(payload, length);
-        break;
-
-    default:
-        break;
+        Serial.print("MQTT connection failed! Error code = ");
+        Serial.println(mqttClient.connectError());
+        delay(500);
     }
-}
-
-void Lansium::begin(String auth)
-{
-    _socketIO.setReconnectInterval(SOCKET_RECONNECT_INTERVAL);
-    _socketIO.beginSSL(LANSIUM_HOST, LANSIUM_PORT, "/socket.io/?EIO=4");
-    _socketIO.onEvent(handleSocketIOEvents);
-
-    _auth = auth;
-    io = &_socketIO;
-    authToken = &_auth;
+    mqttClient.onMessage(onMqttMessage);
+    mqttClient.subscribe(topic + "#");
 }
 
 void Lansium::loop()
 {
-    _socketIO.loop();
+    mqttClient.poll();
 }
 
-void Lansium::send(String event, int pin, auto data)
+void Lansium::send(int pin, bool data)
 {
-    DynamicJsonDocument doc(1024);
-    JsonArray array = doc.to<JsonArray>();
-    array.add(event);
-    JsonObject param = array.createNestedObject();
-    param["pin"] = pin;
-    param["data"] = data;
-    String output;
-    serializeJson(doc, output);
-    _socketIO.sendEVENT(output);
+    mqttClient.beginMessage(topic + pin);
+    mqttClient.print(data);
+    mqttClient.endMessage();
 }
 
-void Lansium::sendStateChanged(int pin, bool state)
+void Lansium::send(int pin, int data)
 {
-    Lansium::send(LANSIUM_EVENT_STATE_CHANGE, pin, state);
+    mqttClient.beginMessage(topic + pin);
+    mqttClient.print(data);
+    mqttClient.endMessage();
 }
 
-void Lansium::sendDataChanged(int pin, String data)
+void Lansium::send(int pin, float data)
 {
-    Lansium::send(LANSIUM_EVENT_DATA_CHANGE, pin, data);
+    mqttClient.beginMessage(topic + pin);
+    mqttClient.print(data);
+    mqttClient.endMessage();
 }
 
-void Lansium::sendDataChanged(int pin, int data)
+void Lansium::send(int pin, double data)
 {
-    Lansium::send(LANSIUM_EVENT_DATA_CHANGE, pin, data);
+    mqttClient.beginMessage(topic + pin);
+    mqttClient.print(data);
+    mqttClient.endMessage();
 }
 
-void Lansium::sendDataChanged(int pin, float data)
+void Lansium::send(int pin, String data)
 {
-    Lansium::send(LANSIUM_EVENT_DATA_CHANGE, pin, data);
-}
-
-void Lansium::sendDataChanged(int pin, double data)
-{
-    Lansium::send(LANSIUM_EVENT_DATA_CHANGE, pin, data);
-}
-
-void Lansium::addStateChangedCallback(void (*callback)(int, bool))
-{
-    stateChangedCallback = callback;
+    mqttClient.beginMessage(topic + pin);
+    mqttClient.print(data);
+    mqttClient.endMessage();
 }
 
 #endif /* LANSIUM_IMPLEMENT_H */
