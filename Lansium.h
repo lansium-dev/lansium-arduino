@@ -6,6 +6,7 @@
 
 #define LANSIUM_CLIENT_TOPIC_NAME "lansium/devices/"
 #define LANSIUM_CLIENT_TOPIC_DATA "/data/"
+#define LANSIUM_CLIENT_TOPIC_STATUS "/status/"
 #define MQTT_KEEP_ALIVE 60
 
 #include <ArduinoMqttClient.h>
