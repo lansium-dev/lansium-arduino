@@ -13,8 +13,6 @@ Lansium::~Lansium(){};
 String topic = "";
 String topic_status = "";
 String lwt_message = "0";
-unsigned long mqtt_connect_time = 0;
-unsigned long time_connected = 0;
 
 void onMqttMessage(int messageSize) {
     int pinIndex = mqttClient.messageTopic().indexOf("data/");
@@ -31,7 +29,7 @@ void onMqttMessage(int messageSize) {
 void Lansium::begin(String clientId, String auth)
 {
     topic = LANSIUM_CLIENT_TOPIC_NAME + clientId + LANSIUM_CLIENT_TOPIC_DATA;
-    topic_status = LANSIUM_CLIENT_TOPIC_NAME + clientId + "/status/";
+    topic_status = LANSIUM_CLIENT_TOPIC_NAME + clientId + LANSIUM_CLIENT_TOPIC_STATUS;
 
     // Set the last will and testament (LWT) message
     mqttClient.beginWill(topic_status + "connected", lwt_message.length(), true, 1);
@@ -47,18 +45,12 @@ void Lansium::begin(String clientId, String auth)
         Serial.println(mqttClient.connectError());
         delay(500);
     }
-    mqtt_connect_time = millis();
 
     mqttClient.onMessage(onMqttMessage);
     mqttClient.subscribe(topic + "#");
 
     mqttClient.beginMessage(topic_status + "connected");
     mqttClient.print(1);
-    mqttClient.endMessage();
-
-    mqttClient.beginMessage(topic_status + "time");
-    time_connected = millis() - mqtt_connect_time;
-    mqttClient.print(time_connected);
     mqttClient.endMessage();
 }
 
